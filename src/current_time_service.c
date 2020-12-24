@@ -3,23 +3,7 @@
 #include <bluetooth/conn.h>
 #include <bluetooth/gatt.h>
 #include <bluetooth/uuid.h>
-
-typedef struct {
-  uint16_t year;// 1582-9999
-  uint8_t month;// 1-12
-  uint8_t day;// 1-31
-  uint8_t hours;// 0-23
-  uint8_t minutes;// 0-59
-  uint8_t seconds;// 0-59
-  uint8_t day_of_week;// 1-7(monday-Sunday)  
-  uint8_t fractions256;// 0-255 (number of 1/256 fractions of a second)
-  uint8_t adjust_reason;// 0 = manual update, 1 = external reference time update, 2 = change timezone, 3 = change of DST
-} date_time;
-
-static u8_t battery = 40U;
-date_time time = {
-  2021,1,1,12,25,25,1,1,0
-};
+#include "date_time.h"
 
 static ssize_t read_time(
   struct bt_conn *conn, 
@@ -28,6 +12,7 @@ static ssize_t read_time(
   u16_t len, 
   u16_t offset)
 {
+  date_time time = get_date_time();
   return bt_gatt_attr_read(
     conn, 
     attr, 
@@ -47,7 +32,7 @@ static ssize_t write_time(
   uint16_t offset,
 	uint8_t flags)
 {
-  time = *(date_time*)buf;
+  set_date_time(*(date_time*)buf);
   return len;
 }
 

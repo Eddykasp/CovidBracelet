@@ -27,7 +27,8 @@ static ssize_t read_str(struct bt_conn *conn, const struct bt_gatt_attr *attr,
   return bt_gatt_attr_read(conn, attr, buf, len, offset, attr->user_data, 
                             strlen(attr->user_data));
 }
-BT_GATT_SERVICE_DEFINE(dis_svc,
+BT_GATT_SERVICE_DEFINE(
+  dis_svc,
   BT_GATT_PRIMARY_SERVICE(BT_UUID_DIS),
   BT_GATT_CHARACTERISTIC(BT_UUID_DIS_MODEL_NUMBER,
                           BT_GATT_CHRC_READ, BT_GATT_PERM_READ,
