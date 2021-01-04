@@ -11,6 +11,7 @@
 #include <bluetooth/uuid.h>
 
 #include "wens_definitions.h"
+#include "wens_types.h"
 
 //test function not sure how and where to actually trigger this
 static ssize_t log_notify(struct bt_conn *conn, const struct bt_gatt_attr *attr, u16_t len)
@@ -20,6 +21,7 @@ static ssize_t log_notify(struct bt_conn *conn, const struct bt_gatt_attr *attr,
 
 // tempkeylist read teststring
 // expand characteristic later to be read/write
+// should read N tempkey_timestamp_pairs (N between 1 and 30)
 static ssize_t read_str(struct bt_conn *conn, const struct bt_gatt_attr *attr, 
                         void *buf, u16_t len, u16_t offset)
 {
