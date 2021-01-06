@@ -14,8 +14,29 @@
 // 1474c96a-38b5-48be-95bc-7f9b78fb4771
 // Temporary Key Length
 #define BT_UUID_ENS_SETTINGS_TKL BT_UUID_DECLARE_128(BT_UUID_128_ENCODE(0x1474c96a, 0x38b5, 0x48be, 0x95bc, 0x7f9b78fb4771))
-
-
-
+// c783b906-edee-4d31-8803-22d162c526ec
+// Maximum Key Duration
+#define BT_UUID_ENS_SETTINGS_MKD BT_UUID_DECLARE_128(BT_UUID_128_ENCODE(0xc783b906, 0xedee, 0x4d31, 0x8803, 0x22d162c526ec))
+// ce97ee98-b1ff-4335-a8c4-721d81793730
+// ENS Advertisement Length
+#define BT_UUID_ENS_SETTINGS_EAL BT_UUID_DECLARE_128(BT_UUID_128_ENCODE(0xce97ee98, 0xb1ff, 0x4335, 0xa8c4, 0x721d81793730))
+// 3c8c47f5-bd0c-4965-9c9c-c4a77dc7b83f
+// Maximum Advertisement Duration
+#define BT_UUID_ENS_SETTINGS_MDA BT_UUID_DECLARE_128(BT_UUID_128_ENCODE(0x3c8c47f5, 0xbd0c, 0x4965, 0x9c9c, 0xc4a77dc7b83f))
+// f0c3a656-51bb-453b-9a0a-12cfe2b8e2bb
+// Scan On Time
+#define BT_UUID_ENS_SETTINGS_SOnTime BT_UUID_DECLARE_128(BT_UUID_128_ENCODE(0xf0c3a656, 0x51bb, 0x453b, 0x9a0a, 0x12cfe2b8e2bb))
+// a861f64a-7132-45f2-926a-e759a3a3596a
+// Scan Off Time
+#define BT_UUID_ENS_SETTINGS_SOffTime BT_UUID_DECLARE_128(BT_UUID_128_ENCODE(0xa861f64a, 0x7132, 0x45f2, 0x926a, 0xe759a3a3596a))
+// 93fcff79-cc5f-470a-98fe-3ddcb46f44ab
+// Minimum Advertising Interval
+#define BT_UUID_ENS_SETTINGS_MinAI BT_UUID_DECLARE_128(BT_UUID_128_ENCODE(0x93fcff79, 0xcc5f, 0x470a, 0x98fe, 0x3ddcb46f44ab))
+// 2d39f769-45ba-4a8e-a233-bac709e7fef0
+// Maximum Advertising Interval
+#define BT_UUID_ENS_SETTINGS_MaxAI BT_UUID_DECLARE_128(BT_UUID_128_ENCODE(0x2d39f769, 0x45ba, 0x4a8e, 0xa233, 0xbac709e7fef0))
+// dd6e490f-5d2a-4688-a1f9-73e2043c188f
+// Self-Pause and Self-Resume
+#define BT_UUID_ENS_SETTINGS_SPR BT_UUID_DECLARE_128(BT_UUID_128_ENCODE(0xdd6e490f, 0x5d2a, 0x4688, 0xa1f9, 0x73e2043c188f))
 
 #endif
