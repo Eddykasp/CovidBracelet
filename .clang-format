@@ -1,0 +1,36 @@
+---
+Language: Cpp
+BasedOnStyle: Microsoft
+IndentWidth: 4
+# don't indent public, private and protected
+AccessModifierOffset: -4
+BreakBeforeBraces: Allman
+# respect user choice for line breaking
+ColumnLimit: 100
+BreakConstructorInitializersBeforeComma: true
+ConstructorInitializerAllOnOneLineOrOnePerLine: false
+SortIncludes: false
+DerivePointerAlignment: false
+PointerAlignment: Left
+NamespaceIndentation: All
+SortIncludes: true
+AllowShortFunctionsOnASingleLine: false
+AlignConsecutiveAssignments: true
+AlignOperands: true
+AlignAfterOpenBracket: Align 
+BinPackArguments: false
+BinPackParameters: false
+AlignAfterOpenBracket: AlwaysBreak
+AllowAllParametersOfDeclarationOnNextLine: false
+ExperimentalAutoDetectBinPacking: false
+AllowAllArgumentsOnNextLine: false
+
+IncludeCategories:
+  - Regex:           '<[^./]+>' # c++ stl includes
+    Priority:        1
+  - Regex:           '(<|")[^/]+(>|")' # includes without path
+    Priority:        2
+  - Regex:           '(<|").+(>|")' # includes with path
+    Priority:        3
+...
+
