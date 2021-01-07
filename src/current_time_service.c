@@ -16,7 +16,6 @@ typedef struct {
   uint8_t adjust_reason;// 0 = manual update, 1 = external reference time update, 2 = change timezone, 3 = change of DST
 } date_time;
 
-static u8_t battery = 40U;
 date_time time = {
   2021,1,1,12,25,25,1,1,0
 };
