@@ -11,6 +11,7 @@
 #include <bluetooth/uuid.h>
 
 #include "ens_settings.h"
+#include "temporary_key_list.h"
 #include "wens_definitions.h"
 #include "wens_types.h"
 
@@ -21,30 +22,33 @@
 //{
 //  return bt_gatt_notify(conn, attr, attr->user_data, len);
 //}
-// Initialize with suggested settings
-// ens_settings settings = {14, 16, 1440, 29, 10, 300, 60, 200, 270, 0};
 
 // tempkeylist read teststring
 // expand characteristic later to be read/write
 // should read N tempkey_timestamp_pairs (N between 1 and 30)
-static ssize_t read_str(
+static ssize_t read_tmp_keys(
     struct bt_conn* conn,
     const struct bt_gatt_attr* attr,
     void* buf,
     u16_t len,
     u16_t offset)
 {
+
+    printk("time = %d", test.time);
+    printk("uuid = %x", test.key.uuid);
+    get_temporary_advertisement_data(&test.key, &test.time);
+
     return bt_gatt_attr_read(
         conn,
         attr,
         buf,
         len,
         offset,
-        attr->user_data,
-        strlen(attr->user_data));
+        &test,
+        sizeof(uint32_t) + sizeof(struct bt_uuid_128));
 }
 
-static ssize_t read(
+static ssize_t read_ens_settings(
     struct bt_conn* conn,
     const struct bt_gatt_attr* attr,
     void* buf,
@@ -57,7 +61,7 @@ static ssize_t read(
     return bt_gatt_attr_read(conn, attr, buf, len, offset, setting_bytes, ENS_SETTING_SIZE);
 }
 
-static ssize_t write(
+static ssize_t write_ens_settings(
     struct bt_conn* conn,
     const struct bt_gatt_attr* attr,
     const void* buf,
@@ -83,13 +87,13 @@ BT_GATT_SERVICE_DEFINE(
         BT_UUID_WENS_TEMPKEYLIST,
         BT_GATT_CHRC_READ,
         BT_GATT_PERM_READ,
-        read_str,
+        read_tmp_keys,
         NULL,
         "TESTVAlUE"),
     BT_GATT_CHARACTERISTIC(
         BT_UUID_WENS_SETTINGS,
         BT_GATT_CHRC_WRITE | BT_GATT_CHRC_READ,
         BT_GATT_PERM_WRITE | BT_GATT_PERM_READ,
-        read,
-        write,
+        read_ens_settings,
+        write_ens_settings,
         &current_ens_settings));

@@ -5,17 +5,18 @@
 #include <bluetooth/hci.h>
 #include <bluetooth/uuid.h>
 
+// Initialize with suggested settings
 ens_settings current_ens_settings = {
-    .data_retention_policy          = 1,
-    .temporary_key_length           = 2,
-    .maximum_key_duration           = 3,
-    .ens_advertisement_length       = 4,
-    .maximum_advertisement_duration = 5,
-    .scan_on_time                   = 6,
-    .scan_off_time                  = 7,
-    .minimum_advertisement_interval = 8,
-    .maximum_advertisement_interval = 9,
-    .self_pause_resume              = 10,
+    .data_retention_policy          = 14,
+    .temporary_key_length           = 16,
+    .maximum_key_duration           = 1440,
+    .ens_advertisement_length       = 29,
+    .maximum_advertisement_duration = 10,
+    .scan_on_time                   = 300,
+    .scan_off_time                  = 60,
+    .minimum_advertisement_interval = 200,
+    .maximum_advertisement_interval = 270,
+    .self_pause_resume              = 0,
 };
 
 void ens_settings_pack(const ens_settings* setting_to_unpack, uint8_t* setting_bytes)
