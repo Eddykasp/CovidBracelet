@@ -4,19 +4,18 @@
 
 temporary_key_pair test = {
     .time = 0,
-    .key = BT_UUID_INIT_128(BT_UUID_128_ENCODE(0x00000000, 0x504F, 0x4CF9, 0xA110, 0x9E373AE8A893)),
+    .key  = {0},
 };
 
 // TODO:: implement random uuid. libuuid not available?
-void get_random_uuid(struct bt_uuid_128* uuid)
+void get_random_uuid(uint8_t* key)
 {
-    test.key =
-        BT_UUID_DECLARE_128(BT_UUID_128_ENCODE(0xA2E355F7, 0x504F, 0x4CF9, 0xA110, 0x9E373AE8A893));
+    sys_rand_get(key, TEMPORARY_KEY_LENGTH);
 }
 
 // TODO:: implement list of time/key pairs and use them instead of current time
-void get_temporary_advertisement_data(struct bt_uuid_128* uuid, uint32_t* time)
+void get_temporary_advertisement_data(uint8_t* key, uint32_t* time)
 {
-    get_random_uuid(uuid);
+    get_random_uuid(key);
     *time = k_uptime_get_32();
 }

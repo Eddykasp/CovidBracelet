@@ -34,18 +34,16 @@ static ssize_t read_tmp_keys(
     u16_t offset)
 {
 
-    printk("time = %d", test.time);
-    printk("uuid = %x", test.key.uuid);
-    get_temporary_advertisement_data(&test.key, &test.time);
+    get_temporary_advertisement_data(test.key, &test.time);
+    printk("time = %x \n", test.time);
+    printk("new random value = 0x");
+    for (int i = 0; i < TEMPORARY_KEY_LENGTH; i++)
+    {
+        printk("%x", test.key[i]);
+    }
+    printk(" \n size = %d \n", sizeof(temporary_key_pair));
 
-    return bt_gatt_attr_read(
-        conn,
-        attr,
-        buf,
-        len,
-        offset,
-        &test,
-        sizeof(uint32_t) + sizeof(struct bt_uuid_128));
+    return bt_gatt_attr_read(conn, attr, buf, len, offset, &test, sizeof(temporary_key_pair));
 }
 
 static ssize_t read_ens_settings(
