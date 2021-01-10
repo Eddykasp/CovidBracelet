@@ -32,17 +32,25 @@ static ssize_t read_tmp_keys(
     u16_t len,
     u16_t offset)
 {
-
-    get_temporary_advertisement_data(test.key, &test.time);
-    printk("time = %x \n", test.time);
-    printk("new random value = 0x");
-    for (int i = 0; i < TEMPORARY_KEY_LENGTH; i++)
+    for (int i = 0; i < temporary_keys_entries; i++)
     {
-        printk("%x", test.key[i]);
+        printk("time = %x \n", temporary_keys.list[i].time);
+        printk("new random value = 0x");
+        for (int j = 0; j < TEMPORARY_KEY_LENGTH; j++)
+        {
+            printk("%x", temporary_keys.list[i].key[j]);
+        }
+        printk(" \n size = %d \n", sizeof(temporary_key_pair));
     }
-    printk(" \n size = %d \n", sizeof(temporary_key_pair));
 
-    return bt_gatt_attr_read(conn, attr, buf, len, offset, &test, sizeof(temporary_key_pair));
+    return bt_gatt_attr_read(
+        conn,
+        attr,
+        buf,
+        len,
+        offset,
+        temporary_keys.list,
+        sizeof(temporary_key_pair) * temporary_keys_entries);
 }
 
 static ssize_t read_ens_settings(

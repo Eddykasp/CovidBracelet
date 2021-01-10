@@ -5,6 +5,7 @@
 #include <bluetooth/uuid.h>
 
 #include "current_time_service.h"
+#include "temporary_key_list.h"
 
 typedef struct
 {
@@ -61,6 +62,13 @@ static ssize_t write_time_epoch(
     printk("current time is: %d \n", last_time_update);
     current_time = last_time_update - base_time;
     printk("current time is: %d \n", current_time);
+    last_time_update = k_uptime_get_32();
+
+    if (temporary_keys_entries == 0)
+    {
+        temporary_keys.list[0] = generate_time_key_pair();
+        temporary_keys_entries++;
+    }
     return len;
 }
 

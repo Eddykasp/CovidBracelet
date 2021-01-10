@@ -3,25 +3,31 @@
 #include <bluetooth/bluetooth.h>
 #include <bluetooth/uuid.h>
 
-/**
- * The code below is for generating random key timestamp
- * pairs while we can't get the actual pairs
- */
+// TODO:: Once the advertisement of temporary keys is finished, add functions
+// to create new keys once the old key expired
 
-temporary_key_pair test = {
-    .time = 0,
-    .key  = {0},
-};
+temp_key_list_t temporary_keys = {.list = {0}};
+uint8_t temporary_keys_entries = 0;
 
-// TODO:: implement random uuid. libuuid not available?
+temporary_key_pair generate_time_key_pair()
+{
+    temporary_key_pair new_pair = {
+        .time = 0,
+        .key  = {0},
+    };
+
+    // time since last CTS update
+    get_temporary_advertisement_data(new_pair.key, &new_pair.time);
+    return new_pair;
+}
+
 void get_random_uuid(uint8_t* key)
 {
     sys_rand_get(key, TEMPORARY_KEY_LENGTH);
 }
 
-// TODO:: implement list of time/key pairs and use them instead of current time
 void get_temporary_advertisement_data(uint8_t* key, uint32_t* time)
 {
     get_random_uuid(key);
-    *time = current_time + k_uptime_get_32();
+    *time = current_time + k_uptime_delta_32(&last_time_update);
 }

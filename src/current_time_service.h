@@ -1,8 +1,11 @@
 #include <bluetooth/bluetooth.h>
 #include <bluetooth/uuid.h>
 
+// Epoch time
 extern uint32_t base_time;
+// Will be used as k_uptime_get_32 to remember when the update came while device is running
 extern uint32_t last_time_update;
+// the current time we calculate from the current time epoch characteristik
 extern uint32_t current_time;
 
 // f6002cd8-4fcb-4199-94a9-af733e355582
