@@ -24,7 +24,6 @@
 //}
 
 // tempkeylist read teststring
-// expand characteristic later to be read/write
 // should read N tempkey_timestamp_pairs (N between 1 and 30)
 static ssize_t read_tmp_keys(
     struct bt_conn* conn,

@@ -3,6 +3,11 @@
 #include <bluetooth/bluetooth.h>
 #include <bluetooth/uuid.h>
 
+/**
+ * The code below is for generating random key timestamp
+ * pairs while we can't get the actual pairs
+ */
+
 temporary_key_pair test = {
     .time = 0,
     .key  = {0},
