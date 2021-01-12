@@ -38,4 +38,24 @@
 #define RACP_RESPONSE_PROCEDURE_NOT_COMPLETE 0x08
 #define RACP_RESPONSE_OPERAND_NOT_SUPPORTED 0x09
 
+#define RACP_RESPONSE uint8_t
+
+typedef struct __attribute__((packed))
+{
+    uint8_t operand_type; // timestamp or sequence number
+    uint32_t* operand_values;
+} operand_struct;
+
+typedef struct __attribute__((packed))
+{
+    uint8_t opcode;
+    uint8_t operator;
+    operand_struct operand;
+} racp_command;
+
+racp_command parse_racp_opcodes(const void* buf, const uint16_t len);
+
+// delete records or send records via enslog characteristic
+RACP_RESPONSE execute_racp(racp_command command);
+
 #endif

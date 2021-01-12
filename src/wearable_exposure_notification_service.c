@@ -79,8 +79,7 @@ static ssize_t write_ens_settings(
     return len;
 }
 
-// TODO:: Unfinished code
-static ssize_t write_racp_settings(
+static ssize_t apply_racp_command(
     struct bt_conn* conn,
     const struct bt_gatt_attr* attr,
     const void* buf,
@@ -88,8 +87,10 @@ static ssize_t write_racp_settings(
     uint16_t offset,
     uint8_t flags)
 {
-    ens_settings_unpack((const uint8_t*)buf, &current_ens_settings);
-    return len;
+    RACP_RESPONSE response = execute_racp(parse_racp_opcodes(buf, len));
+
+    memcpy(buf, response, sizeof(RACP_RESPONSE));
+    return sizeof(RACP_RESPONSE);
 }
 
 BT_GATT_SERVICE_DEFINE(
@@ -121,5 +122,5 @@ BT_GATT_SERVICE_DEFINE(
         BT_GATT_CHRC_WRITE,
         BT_GATT_PERM_WRITE,
         NULL,
-        write_ens_settings,
+        apply_racp_command,
         NULL));
