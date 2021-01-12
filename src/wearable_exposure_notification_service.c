@@ -11,6 +11,7 @@
 #include <bluetooth/uuid.h>
 
 #include "ens_settings.h"
+#include "record_access_control_point.h"
 #include "temporary_key_list.h"
 #include "wens_definitions.h"
 #include "wens_types.h"
@@ -78,6 +79,19 @@ static ssize_t write_ens_settings(
     return len;
 }
 
+// TODO:: Unfinished code
+static ssize_t write_racp_settings(
+    struct bt_conn* conn,
+    const struct bt_gatt_attr* attr,
+    const void* buf,
+    u16_t len,
+    uint16_t offset,
+    uint8_t flags)
+{
+    ens_settings_unpack((const uint8_t*)buf, &current_ens_settings);
+    return len;
+}
+
 BT_GATT_SERVICE_DEFINE(
     wens_svc,
     BT_GATT_PRIMARY_SERVICE(BT_UUID_WENS),
@@ -101,4 +115,11 @@ BT_GATT_SERVICE_DEFINE(
         BT_GATT_PERM_WRITE | BT_GATT_PERM_READ,
         read_ens_settings,
         write_ens_settings,
-        &current_ens_settings));
+        &current_ens_settings),
+    BT_GATT_CHARACTERISTIC(
+        BT_UUID_WENS_RACP,
+        BT_GATT_CHRC_WRITE,
+        BT_GATT_PERM_WRITE,
+        NULL,
+        write_ens_settings,
+        NULL));
