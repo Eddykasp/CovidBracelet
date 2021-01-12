@@ -23,7 +23,11 @@ extern ens_record* ens_records;
 void add_ens_record(const ens_record* new_entry);
 ens_record* get_all_records();
 
-ens_record* get_recods_by_timestamps(uint8_t length, uint32_t* timestamps);
-ens_record* get_recods_by_sequences(uint8_t length, uint32_t* sequences);
+ens_record* get_records_by_timestamps(uint32_t start, uint32_t end);
+ens_record* get_records_by_sequences(uint32_t start, uint32_t end);
+
+// define how end is interpreted
+void delete_records_by_timestamps(uint32_t start, uint32_t end);
+void delete_records_by_sequences(uint32_t start, uint32_t end);
 
 #endif
