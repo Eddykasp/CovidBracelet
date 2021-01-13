@@ -1,5 +1,6 @@
 #ifndef RECORD_ACCESS_CONTROL_POINT_H
 #define RECORD_ACCESS_CONTROL_POINT_H
+#include <bluetooth/uuid.h>
 
 // Opcode
 #define RACP_OPCODE_DELETE_STORED_RECORDS 0x02
@@ -53,7 +54,7 @@ typedef struct __attribute__((packed))
     operand_struct operand;
 } racp_command;
 
-racp_command parse_racp_opcodes(const void* buf, const uint16_t len);
+racp_command parse_racp_opcodes(const uint8_t* buf, const uint16_t len);
 
 // delete records or send records via enslog characteristic
 RACP_RESPONSE execute_racp(racp_command command);

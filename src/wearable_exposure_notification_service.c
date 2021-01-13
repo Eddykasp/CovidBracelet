@@ -75,7 +75,11 @@ static ssize_t write_ens_settings(
     uint16_t offset,
     uint8_t flags)
 {
+    uint8_t test[3] = {1, 2, 3};
     ens_settings_unpack((const uint8_t*)buf, &current_ens_settings);
+    // printk("offset %d", offset);
+    // printk("len %d", len);
+    // memcpy(buf, test, sizeof(uint8_t) * 3);
     return len;
 }
 
