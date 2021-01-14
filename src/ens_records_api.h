@@ -20,11 +20,13 @@ typedef struct __attribute__((packed))
 
 extern ens_record* ens_records;
 
-bool add_ens_record(const ens_record* new_entry);
-ens_record* get_all_records();
+bool add_ens_record(ens_record new_entry);
 
+ens_record* get_all_records();
 ens_record* get_records_by_timestamps(uint32_t start, uint32_t end);
 ens_record* get_records_by_sequences(uint32_t start, uint32_t end);
+ens_record* get_first_record();
+ens_record* get_last_record();
 
 // define how end is interpreted
 /* Delete all records by timestamps.
@@ -35,5 +37,7 @@ if both are unequal to 0, delete within range start <= timestamp <= end
 bool delete_records_by_timestamps(uint32_t start, uint32_t end);
 bool delete_records_by_sequences(uint32_t start, uint32_t end);
 bool delete_all_records();
+bool delete_first_record();
+bool delete_last_record();
 
 #endif

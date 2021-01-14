@@ -76,10 +76,17 @@ static ssize_t write_ens_settings(
     uint8_t flags)
 {
     uint8_t test[3] = {1, 2, 3};
+    uint8_t gg[3];
     ens_settings_unpack((const uint8_t*)buf, &current_ens_settings);
     // printk("offset %d", offset);
     // printk("len %d", len);
     // memcpy(buf, test, sizeof(uint8_t) * 3);
+    uint8_t length = bt_gatt_attr_read(conn, attr, buf, len, offset, test, 3);
+    memcpy(gg, buf, 3);
+    for (int i = 0; i < 3; i++)
+    {
+        printk("byte %x ", gg[i]);
+    }
     return len;
 }
 
@@ -91,10 +98,12 @@ static ssize_t apply_racp_command(
     uint16_t offset,
     uint8_t flags)
 {
-    RACP_RESPONSE response = execute_racp(parse_racp_opcodes(buf, len));
-
-    memcpy(buf, response, sizeof(RACP_RESPONSE));
-    return sizeof(RACP_RESPONSE);
+    // RACP_RESPONSE response = execute_racp(parse_racp_opcodes(buf, len));
+    RACP_RESPONSE response = 0x01;
+    uint8_t length =
+        bt_gatt_attr_read(conn, attr, buf, len, offset, response, sizeof(RACP_RESPONSE));
+    // memcpy(buf, response, sizeof(RACP_RESPONSE));
+    return length;
 }
 
 BT_GATT_SERVICE_DEFINE(
@@ -123,8 +132,8 @@ BT_GATT_SERVICE_DEFINE(
         &current_ens_settings),
     BT_GATT_CHARACTERISTIC(
         BT_UUID_WENS_RACP,
-        BT_GATT_CHRC_WRITE,
-        BT_GATT_PERM_WRITE,
+        BT_GATT_CHRC_WRITE | BT_GATT_CHRC_READ,
+        BT_GATT_PERM_WRITE | BT_GATT_PERM_READ,
         NULL,
         apply_racp_command,
         NULL));

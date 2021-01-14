@@ -22,79 +22,147 @@ racp_command parse_racp_opcodes(const uint8_t* buf, const uint16_t len)
     return command;
 }
 
+// TODO:: Refactor more if this at least works
+RACP_RESPONSE handle_opcode_delete(racp_command command)
+{
+    RACP_RESPONSE response = 0x01;
+    uint32_t start         = 0;
+    uint32_t end           = 0;
+    bool operation_applied = false;
+    operand_function func  = &delete_records_by_sequences;
+    switch (command.operator)
+    {
+    case RACP_OPERATOR_ALL_RECORDS:
+        response = delete_all_records();
+        break;
+    case RACP_OPERATOR_LESS_OR_EQUAL_TO:
+        // TODO: Maybe use unpack?
+        memcpy(&end, (command.operand.operand_values + 4), sizeof(uint32_t));
+        if (command.operand.operand_type == RACP_OPERAND_TIMESTAMP)
+        {
+            func = &delete_records_by_timestamps;
+        }
+        operation_applied = func(start, end);
+        break;
+    case RACP_OPERATOR_GREATER_OR_EQUAL_TO:
+        // TODO: Maybe use unpack?
+        memcpy(&start, command.operand.operand_values, sizeof(uint32_t));
+        if (command.operand.operand_type == RACP_OPERAND_TIMESTAMP)
+        {
+            func = &delete_records_by_timestamps;
+        }
+        operation_applied = func(start, end);
+        break;
+    case RACP_OPERATOR_WITHIN_RANGE_OF:
+        // TODO: Maybe use unpack?
+        memcpy(&start, command.operand.operand_values, sizeof(uint32_t));
+        memcpy(&end, (command.operand.operand_values + 4), sizeof(uint32_t));
+        if (command.operand.operand_type == RACP_OPERAND_TIMESTAMP)
+        {
+            func = &delete_records_by_timestamps;
+        }
+        operation_applied = func(start, end);
+        break;
+    case RACP_OPERATOR_FIRST_RECORD:
+        operation_applied = delete_first_record();
+        break;
+    case RACP_OPERATOR_LAST_RECORD:
+        operation_applied = delete_last_record();
+        break;
+    default:
+        response = 0x04;
+        break;
+    }
+    return response;
+}
+
+RACP_RESPONSE handle_opcode_abort(racp_command command)
+{
+    RACP_RESPONSE response = 0x01;
+    // TODO: Abort function
+    return response;
+}
+RACP_RESPONSE handle_opcode_report_records_number(racp_command command)
+{
+    RACP_RESPONSE response = 0x01;
+    uint32_t start         = 0;
+    uint32_t end           = 0;
+    return response;
+}
+RACP_RESPONSE handle_opcode_combined_report(racp_command command)
+{
+    RACP_RESPONSE response = 0x01;
+    uint32_t start         = 0;
+    uint32_t end           = 0;
+    bool operation_applied = false;
+    operand_function func  = &get_records_by_sequences;
+    switch (command.operator)
+    {
+    case RACP_OPERATOR_ALL_RECORDS:
+        response = get_all_records();
+        break;
+    case RACP_OPERATOR_LESS_OR_EQUAL_TO:
+        // TODO: Maybe use unpack?
+        memcpy(&end, (command.operand.operand_values + 4), sizeof(uint32_t));
+        if (command.operand.operand_type == RACP_OPERAND_TIMESTAMP)
+        {
+            func = &get_records_by_timestamps;
+        }
+        operation_applied = func(start, end);
+        break;
+    case RACP_OPERATOR_GREATER_OR_EQUAL_TO:
+        // TODO: Maybe use unpack?
+        memcpy(&start, command.operand.operand_values, sizeof(uint32_t));
+        if (command.operand.operand_type == RACP_OPERAND_TIMESTAMP)
+        {
+            func = &get_records_by_timestamps;
+        }
+        operation_applied = func(start, end);
+        break;
+    case RACP_OPERATOR_WITHIN_RANGE_OF:
+        // TODO: Maybe use unpack?
+        memcpy(&start, command.operand.operand_values, sizeof(uint32_t));
+        memcpy(&end, (command.operand.operand_values + 4), sizeof(uint32_t));
+        if (command.operand.operand_type == RACP_OPERAND_TIMESTAMP)
+        {
+            func = &get_records_by_timestamps;
+        }
+        operation_applied = func(start, end);
+        break;
+    case RACP_OPERATOR_FIRST_RECORD:
+        operation_applied = get_first_record();
+        break;
+    case RACP_OPERATOR_LAST_RECORD:
+        operation_applied = get_last_record();
+        break;
+    default:
+        response = 0x04;
+        break;
+    }
+    return response;
+}
+
 // parse command and send delete or get records, use enslog charactacteristic to send
 // notifications to client
 RACP_RESPONSE execute_racp(racp_command command)
 {
     RACP_RESPONSE response = 0;
-    uint32_t start         = 0;
-    uint32_t end           = 0;
-    bool done              = false;
     switch (command.opcode)
     {
     case RACP_OPCODE_DELETE_STORED_RECORDS:
-        switch (command.operator)
-        {
-        case RACP_OPERATOR_ALL_RECORDS:
-            delete_all_records();
-            break;
-        case RACP_OPERATOR_LESS_OR_EQUAL_TO:
-            // TODO: Maybe use unpack?
-            memcpy(&end, (command.operand.operand_values + 4), sizeof(uint32_t));
-            if (command.operand.operand_type == RACP_OPERAND_SEQUENCE_NUMBER)
-            {
-                delete_records_by_sequences(0, end);
-            }
-            else
-            {
-                delete_records_by_timestamps(0, end);
-            }
-            break;
-        case RACP_OPERATOR_GREATER_OR_EQUAL_TO:
-            // TODO: Maybe use unpack?
-            memcpy(&start, command.operand.operand_values, sizeof(uint32_t));
-            if (command.operand.operand_type == RACP_OPERAND_SEQUENCE_NUMBER)
-            {
-                delete_records_by_sequences(start, 0);
-            }
-            else
-            {
-                delete_records_by_timestamps(start, 0);
-            }
-            break;
-        case RACP_OPERATOR_WITHIN_RANGE_OF:
-            // TODO: Maybe use unpack?
-            memcpy(&start, command.operand.operand_values, sizeof(uint32_t));
-            memcpy(&end, (command.operand.operand_values + 4), sizeof(uint32_t));
-            if (command.operand.operand_type == RACP_OPERAND_SEQUENCE_NUMBER)
-            {
-                // done = delete_records_by_sequences(start, end);
-            }
-            else
-            {
-                // done = delete_records_by_timestamps(start, end);
-            }
-            break;
-        case RACP_OPERATOR_FIRST_RECORD:
-            delete_all_records();
-            break;
-        case RACP_OPERATOR_LAST_RECORD:
-            delete_all_records();
-            break;
-        default:
-            break;
-        }
+        handle_opcode_delete(command);
         break;
     case RACP_OPCODE_ABPORT_OPERATION:
-        /* code */
+        handle_opcode_abort(command);
         break;
     case RACP_OPCODE_REPORT_NUMBER_OF_RECORDS:
-        /* code */
+        handle_opcode_report_records_number(command);
         break;
     case RACP_OPCODE_COMBINED_REPORT:
-        /* code */
+        handle_opcode_combined_report(command);
         break;
     default:
+        response = 0x02;
         break;
     }
 
