@@ -19,6 +19,7 @@
 
 #include "covid.h"
 #include "contacts.h"
+#include "wens_definitions.h"
 
 //TODO: change device name in project conf, set id dynamicaally, so that not all devices have the same name...
 
@@ -90,10 +91,17 @@ static const struct bt_data ad[] = {
 	BT_DATA_BYTES(BT_DATA_FLAGS, (BT_LE_AD_GENERAL | BT_LE_AD_NO_BREDR)),
 	BT_DATA_BYTES(BT_DATA_UUID16_ALL,
 								0x0a, 0x18),
+								//TODO: add current time service ad
 	/* My Service UUID (same as above) */
 	BT_DATA_BYTES(BT_DATA_UUID128_ALL,
 		0x06, 0x51, 0xC7, 0x9E, 0xAD, 0xA7, 0x42, 0xEA, 
 		0x98, 0x6A, 0x9F, 0x69, 0x79, 0x0D, 0x11, 0xF2),
+	/* WENS Service UUID */
+	// inverted due to endianness, need to doublecheck
+	BT_DATA_BYTES(BT_DATA_UUID128_ALL,
+		0xD4, 0x91, 0xDE, 0x87, 0xD1, 0xEA, 0x89, 0x8A, 
+		0xF0, 0x42, 0x0E, 0x09, 0x69, 0x39, 0xA2, 0x4B,
+		),
 };
 
 static ssize_t read_next_key(struct bt_conn *conn, const struct bt_gatt_attr *attr, void *buf, uint16_t len, uint16_t offset){
