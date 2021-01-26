@@ -90,6 +90,8 @@ static ssize_t write_ens_settings(
     return len;
 }
 
+RACP_RESPONSE response = 0x01;
+
 static ssize_t apply_racp_command(
     struct bt_conn* conn,
     const struct bt_gatt_attr* attr,
@@ -99,10 +101,13 @@ static ssize_t apply_racp_command(
     uint8_t flags)
 {
     // RACP_RESPONSE response = execute_racp(parse_racp_opcodes(buf, len));
-    RACP_RESPONSE response = 0x01;
+    printk("offset = %d", offset);
     uint8_t length =
         bt_gatt_attr_read(conn, attr, buf, len, offset, response, sizeof(RACP_RESPONSE));
-    // memcpy(buf, response, sizeof(RACP_RESPONSE));
+    memcpy(buf, response, sizeof(RACP_RESPONSE));
+    printk("offset = %d", offset);
+    printk("length = %d", length);
+    printk("len = %d", len);
     return length;
 }
 
@@ -132,8 +137,8 @@ BT_GATT_SERVICE_DEFINE(
         &current_ens_settings),
     BT_GATT_CHARACTERISTIC(
         BT_UUID_WENS_RACP,
-        BT_GATT_CHRC_WRITE | BT_GATT_CHRC_READ,
-        BT_GATT_PERM_WRITE | BT_GATT_PERM_READ,
+        BT_GATT_CHRC_WRITE,
+        BT_GATT_PERM_WRITE,
         NULL,
         apply_racp_command,
-        NULL));
+        &response));

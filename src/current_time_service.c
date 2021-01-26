@@ -5,6 +5,7 @@
 #include <bluetooth/uuid.h>
 
 #include "current_time_service.h"
+#include "ens_records_api.h"
 #include "temporary_key_list.h"
 
 typedef struct
@@ -59,7 +60,7 @@ static ssize_t write_time_epoch(
     uint8_t flags)
 {
     memcpy(&last_time_update, buf, sizeof(uint32_t));
-    printk("current time is: %d \n", last_time_update);
+    printk("time received is: %d \n", last_time_update);
     current_time = last_time_update - base_time;
     printk("current time is: %d \n", current_time);
     last_time_update = k_uptime_get_32();
@@ -69,6 +70,9 @@ static ssize_t write_time_epoch(
         temporary_keys.list[0] = generate_time_key_pair();
         temporary_keys_entries++;
     }
+
+    // TODO: Remove this test function
+    generate_test_data(current_time);
     return len;
 }
 
@@ -77,17 +81,10 @@ BT_GATT_SERVICE_DEFINE(
     BT_GATT_PRIMARY_SERVICE(BT_UUID_CTS),
     BT_GATT_CHARACTERISTIC(
         BT_UUID_CTS_CURRENT_TIME,
-        BT_GATT_CHRC_WRITE,
-        BT_GATT_PERM_WRITE,
-        NULL,
-        write_time,
-        NULL),
-    BT_GATT_CHARACTERISTIC(
-        BT_UUID_CTS_CURRENT_TIME,
-        BT_GATT_CHRC_READ,
-        BT_GATT_PERM_READ,
+        BT_GATT_CHRC_WRITE | BT_GATT_CHRC_READ,
+        BT_GATT_PERM_WRITE | BT_GATT_PERM_READ,
         read_time,
-        NULL,
+        write_time,
         NULL),
     BT_GATT_CHARACTERISTIC(
         BT_UUID_ENS_SETTINGS_CTE,

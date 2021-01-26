@@ -11,6 +11,25 @@ bool add_ens_record(ens_record new_entry)
     return true;
 }
 
+void generate_test_data(uint32_t timestamp)
+{
+    printk("starting creation of test data");
+    for (int i = 0; i <= 10; i++)
+    {
+        ltv_field field         = {0};
+        field.length            = 1;
+        field.type              = 5;
+        field.ltv_value         = 1 + i;
+        ens_record record       = {0};
+        record.sequence_number  = i;
+        record.timestamp        = timestamp + (i * 60);
+        record.length           = sizeof(ltv_field);
+        record.ltv_structure[0] = field;
+        printk("add element %i", i);
+        add_ens_record(record);
+    }
+}
+
 ens_record* get_all_records()
 {
     return ens_records;
