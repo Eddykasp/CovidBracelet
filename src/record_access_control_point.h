@@ -1,5 +1,6 @@
 #ifndef RECORD_ACCESS_CONTROL_POINT_H
 #define RECORD_ACCESS_CONTROL_POINT_H
+#include "wearable_exposure_notification_service.h"
 #include <bluetooth/uuid.h>
 
 // Opcode
@@ -39,7 +40,7 @@
 #define RACP_RESPONSE_PROCEDURE_NOT_COMPLETE 0x08
 #define RACP_RESPONSE_OPERAND_NOT_SUPPORTED 0x09
 
-#define RACP_RESPONSE uint8_t
+#define RACP_RESPONSE uint16_t
 
 typedef struct __attribute__((packed))
 {

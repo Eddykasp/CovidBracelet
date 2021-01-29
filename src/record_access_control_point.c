@@ -95,11 +95,13 @@ RACP_RESPONSE handle_opcode_combined_report(racp_command command)
     uint32_t start         = 0;
     uint32_t end           = 0;
     bool operation_applied = false;
+    uint8_t length         = 0;
     operand_function func  = &get_records_by_sequences;
+    struct ens_records* data;
     switch (command.operator)
     {
     case RACP_OPERATOR_ALL_RECORDS:
-        response = get_all_records();
+        data = get_all_records(&length);
         break;
     case RACP_OPERATOR_LESS_OR_EQUAL_TO:
         // TODO: Maybe use unpack?
@@ -139,6 +141,9 @@ RACP_RESPONSE handle_opcode_combined_report(racp_command command)
         response = 0x04;
         break;
     }
+
+    send_notification(data, length);
+
     return response;
 }
 
@@ -147,6 +152,11 @@ RACP_RESPONSE handle_opcode_combined_report(racp_command command)
 RACP_RESPONSE execute_racp(racp_command command)
 {
     RACP_RESPONSE response = 0;
+    uint8_t length         = 0;
+
+    struct ens_records* data;
+    data = get_all_records(&length);
+    send_notification(data, length);
     switch (command.opcode)
     {
     case RACP_OPCODE_DELETE_STORED_RECORDS:

@@ -1,5 +1,6 @@
 #ifndef ENS_RECORDS_API_H
 #define ENS_RECORDS_API_H
+#include <bluetooth/gatt.h>
 #include <bluetooth/uuid.h>
 
 // Made up of 1 or more concatenated ltv structures
@@ -20,11 +21,13 @@ typedef struct __attribute__((packed))
     ltv_field ltv_structure[9]; //>= 1 LTV types
 } ens_record;
 
-extern ens_record* ens_records;
+extern ens_record ens_records[10];
+
+extern bool notify_enabled;
 
 bool add_ens_record(ens_record new_entry);
 
-ens_record* get_all_records();
+ens_record* get_all_records(uint8_t* len);
 ens_record* get_records_by_timestamps(uint32_t start, uint32_t end);
 ens_record* get_records_by_sequences(uint32_t start, uint32_t end);
 ens_record* get_first_record();

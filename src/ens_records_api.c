@@ -1,8 +1,9 @@
 #include "ens_records_api.h"
 #include <bluetooth/uuid.h>
 
-ens_record* ens_records = {0};
-uint32_t next_position  = 0;
+ens_record ens_records[10] = {0};
+uint32_t next_position     = 0;
+bool notify_enabled        = false;
 
 bool add_ens_record(ens_record new_entry)
 {
@@ -30,9 +31,10 @@ void generate_test_data(uint32_t timestamp)
     }
 }
 
-ens_record* get_all_records()
+ens_record* get_all_records(uint8_t* len)
 {
-    return ens_records;
+    *len = sizeof(ens_record);
+    return &ens_records[0];
 }
 
 ens_record* get_first_record()

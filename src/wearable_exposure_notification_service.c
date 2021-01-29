@@ -13,6 +13,7 @@
 #include "ens_settings.h"
 #include "record_access_control_point.h"
 #include "temporary_key_list.h"
+#include "wearable_exposure_notification_service.h"
 #include "wens_definitions.h"
 #include "wens_types.h"
 
@@ -90,7 +91,7 @@ static ssize_t write_ens_settings(
     return len;
 }
 
-RACP_RESPONSE response = 0x01;
+RACP_RESPONSE response = 0x0001;
 
 static ssize_t apply_racp_command(
     struct bt_conn* conn,
@@ -100,15 +101,8 @@ static ssize_t apply_racp_command(
     uint16_t offset,
     uint8_t flags)
 {
-    // RACP_RESPONSE response = execute_racp(parse_racp_opcodes(buf, len));
-    printk("offset = %d", offset);
-    uint8_t length =
-        bt_gatt_attr_read(conn, attr, buf, len, offset, response, sizeof(RACP_RESPONSE));
-    memcpy(buf, response, sizeof(RACP_RESPONSE));
-    printk("offset = %d", offset);
-    printk("length = %d", length);
-    printk("len = %d", len);
-    return length;
+    RACP_RESPONSE response = execute_racp(parse_racp_opcodes(buf, len));
+    return len;
 }
 
 BT_GATT_SERVICE_DEFINE(
@@ -121,6 +115,7 @@ BT_GATT_SERVICE_DEFINE(
         NULL,
         NULL,
         NULL),
+    BT_GATT_CCC(notify_enabled_ens_records, BT_GATT_PERM_READ | BT_GATT_PERM_WRITE),
     BT_GATT_CHARACTERISTIC(
         BT_UUID_WENS_TEMPKEYLIST,
         BT_GATT_CHRC_READ,
@@ -142,3 +137,15 @@ BT_GATT_SERVICE_DEFINE(
         NULL,
         apply_racp_command,
         &response));
+
+static void notify_enabled_ens_records(const struct bt_gatt_attr* attr, uint16_t value)
+{
+    notify_enabled = value == BT_GATT_CCC_NOTIFY;
+    printk("notify enabled is now %s", notify_enabled ? "true" : "false");
+}
+
+void send_notification(ens_record* records, uint8_t len)
+{
+    printk("send notify");
+    bt_gatt_notify(NULL, &wens_svc.attrs[1], records, 5);
+}
