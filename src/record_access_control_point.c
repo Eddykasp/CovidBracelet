@@ -152,11 +152,7 @@ RACP_RESPONSE handle_opcode_combined_report(racp_command command)
 RACP_RESPONSE execute_racp(racp_command command)
 {
     RACP_RESPONSE response = 0;
-    uint8_t length         = 0;
 
-    struct ens_records* data;
-    data = get_all_records(&length);
-    send_notification(data, length);
     switch (command.opcode)
     {
     case RACP_OPCODE_DELETE_STORED_RECORDS:

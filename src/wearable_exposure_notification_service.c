@@ -24,7 +24,7 @@
 //{
 //  return bt_gatt_notify(conn, attr, attr->user_data, len);
 //}
-
+uint16_t max_mtu = 0;
 // tempkeylist read teststring
 // should read N tempkey_timestamp_pairs (N between 1 and 30)
 static ssize_t read_tmp_keys(
@@ -101,6 +101,9 @@ static ssize_t apply_racp_command(
     uint16_t offset,
     uint8_t flags)
 {
+    // Check for MTU every racp request in case MTU changed
+    max_mtu = bt_gatt_get_mtu(conn);
+    printk("max mtu = %d", max_mtu);
     RACP_RESPONSE response = execute_racp(parse_racp_opcodes(buf, len));
     return len;
 }
@@ -147,5 +150,5 @@ static void notify_enabled_ens_records(const struct bt_gatt_attr* attr, uint16_t
 void send_notification(ens_record* records, uint8_t len)
 {
     printk("send notify");
-    bt_gatt_notify(NULL, &wens_svc.attrs[1], records, 5);
+    bt_gatt_notify(NULL, &wens_svc.attrs[1], records, len);
 }

@@ -37,6 +37,29 @@ ens_record* get_all_records(uint8_t* len)
     return &ens_records[0];
 }
 
+ens_log get_packed_record(ens_record* record, uint16_t max_mtu)
+{
+    uint16_t used_mtu       = 0;
+    ens_log log             = {0};
+    uint8_t records_per_log = max_mtu / sizeof(ens_record);
+
+    // Send only 1 record with segmentation 01
+    if (records_per_log == 0)
+    {
+        // log.record = record[0];
+        // log.seg_flags |= (1 << 7);
+        // TODO: setup function to send only first max_mtu bits to the client.
+    }
+    else
+    {
+        log.seg_flags |= 1 << 8;
+        for (int i = 0; i < records_per_log; i++)
+        {
+            log.record = record[i];
+        }
+    }
+}
+
 ens_record* get_first_record()
 {
     return ens_records;
