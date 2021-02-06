@@ -147,8 +147,13 @@ static void notify_enabled_ens_records(const struct bt_gatt_attr* attr, uint16_t
     printk("notify enabled is now %s", notify_enabled ? "true" : "false");
 }
 
-void send_notification(ens_record* records, uint8_t len)
+void send_notification(uint8_t* ens_log, uint8_t len)
 {
-    printk("send notify");
-    bt_gatt_notify(NULL, &wens_svc.attrs[1], records, len);
+    printk("send notify with len %i \n", len);
+    bt_gatt_notify(NULL, &wens_svc.attrs[1], ens_log, len);
+}
+
+uint16_t get_max_mtu()
+{
+    return max_mtu;
 }

@@ -13,8 +13,7 @@ typedef struct __attribute__((packed))
 
 typedef struct __attribute__((packed))
 {
-    // TODO: 24 bit int? WTF?
-    uint32_t sequence_number;   // Start at 0 and incremente with each ENS Record to 0xFFFFFF. Than
+    uint8_t sequence_number[3]; // Start at 0 and incremente with each ENS Record to 0xFFFFFF. Than
                                 // start at 0
     uint32_t timestamp;         // Timestamp of epoch Year 2000. Can be set by CTS
     uint16_t length;            // Length of the rest record in bytes (ltv_field length)
@@ -27,6 +26,20 @@ typedef struct __attribute__((packed))
     ens_record record;
 } ens_log;
 
+typedef enum
+{
+    PACKAGE_KIND_COMPLETE,
+    PACKAGE_KIND_FIRST,
+    PACKAGE_KIND_CONTINUATION,
+    PACKAGE_KIND_LAST,
+} packet_kind;
+
+typedef enum
+{
+    SEQUENCENUMBER,
+    TIMESTAMP,
+} compare_type;
+
 extern ens_record ens_records[10];
 
 extern bool notify_enabled;
@@ -34,11 +47,13 @@ extern bool notify_enabled;
 bool add_ens_record(ens_record new_entry);
 
 // len is always the amount of records not the length
-ens_record* get_all_records(uint8_t* len);
-ens_record* get_records_by_timestamps(uint32_t start, uint32_t end);
-ens_record* get_records_by_sequences(uint32_t start, uint32_t end);
-ens_record* get_first_record();
-ens_record* get_last_record();
+void get_all_records(uint32_t* start, uint32_t* end, compare_type type);
+void get_first_record();
+void get_last_record();
+
+// TODO test iterator for test dada
+static ens_record* get_next_ens_record();
+uint16_t get_ens_records_count();
 
 // define how end is interpreted
 /* Delete all records by timestamps.
@@ -46,14 +61,11 @@ If start = 0, delete all records with timestamp <= end
 If end = 0, delete all records with timestamp >= start
 if both are unequal to 0, delete within range start <= timestamp <= end
 */
-bool delete_records_by_timestamps(uint32_t start, uint32_t end);
-bool delete_records_by_sequences(uint32_t start, uint32_t end);
 bool delete_all_records();
 bool delete_first_record();
 bool delete_last_record();
 
-ens_log get_packed_record(ens_record* record, uint16_t max_mtu);
-
+void test_transfere(uint32_t* start, uint32_t* end, compare_type);
 void generate_test_data(uint32_t timestamp);
 
 #endif

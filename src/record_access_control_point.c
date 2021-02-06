@@ -3,6 +3,13 @@
 #include <string.h>
 #include <bluetooth/uuid.h>
 
+#define MY_STACK_SIZE 2000
+#define MY_PRIORITY 5
+// K_THREAD_DEFINE(my_tid, MY_STACK_SIZE, test_transfere, NULL, NULL, NULL, MY_PRIORITY, 0, 0);
+K_THREAD_STACK_DEFINE(my_stack_area, MY_STACK_SIZE);
+struct k_thread my_thread_data;
+k_tid_t my_tid;
+
 racp_command parse_racp_opcodes(const uint8_t* buf, const uint16_t len)
 {
     operand_struct operand = {0};
@@ -22,58 +29,62 @@ racp_command parse_racp_opcodes(const uint8_t* buf, const uint16_t len)
     return command;
 }
 
-// TODO:: Refactor more if this at least works
+/*
+    Handle the delete operator inside the racp request.
+*/
 RACP_RESPONSE handle_opcode_delete(racp_command command)
 {
-    RACP_RESPONSE response = 0x01;
-    uint32_t start         = 0;
-    uint32_t end           = 0;
-    bool operation_applied = false;
-    operand_function func  = &delete_records_by_sequences;
+    uint32_t start        = 0;
+    uint32_t end          = 0;
+    uint8_t type          = 0;
+    operand_function func = delete_all_records;
+
     switch (command.operator)
     {
     case RACP_OPERATOR_ALL_RECORDS:
-        response = delete_all_records();
         break;
+
     case RACP_OPERATOR_LESS_OR_EQUAL_TO:
-        // TODO: Maybe use unpack?
         memcpy(&end, (command.operand.operand_values + 4), sizeof(uint32_t));
-        if (command.operand.operand_type == RACP_OPERAND_TIMESTAMP)
-        {
-            func = &delete_records_by_timestamps;
-        }
-        operation_applied = func(start, end);
+        type = command.operand.operand_type == RACP_OPERAND_TIMESTAMP;
         break;
+
     case RACP_OPERATOR_GREATER_OR_EQUAL_TO:
-        // TODO: Maybe use unpack?
         memcpy(&start, command.operand.operand_values, sizeof(uint32_t));
-        if (command.operand.operand_type == RACP_OPERAND_TIMESTAMP)
-        {
-            func = &delete_records_by_timestamps;
-        }
-        operation_applied = func(start, end);
+        type = command.operand.operand_type == RACP_OPERAND_TIMESTAMP;
         break;
+
     case RACP_OPERATOR_WITHIN_RANGE_OF:
-        // TODO: Maybe use unpack?
         memcpy(&start, command.operand.operand_values, sizeof(uint32_t));
         memcpy(&end, (command.operand.operand_values + 4), sizeof(uint32_t));
-        if (command.operand.operand_type == RACP_OPERAND_TIMESTAMP)
-        {
-            func = &delete_records_by_timestamps;
-        }
-        operation_applied = func(start, end);
+        type = command.operand.operand_type == RACP_OPERAND_TIMESTAMP;
         break;
+
     case RACP_OPERATOR_FIRST_RECORD:
-        operation_applied = delete_first_record();
+        func = delete_first_record;
         break;
+
     case RACP_OPERATOR_LAST_RECORD:
-        operation_applied = delete_last_record();
+        func = delete_last_record;
         break;
+
     default:
-        response = 0x04;
-        break;
+        return 0x04;
     }
-    return response;
+
+    my_tid = k_thread_create(
+        &my_thread_data,
+        my_stack_area,
+        K_THREAD_STACK_SIZEOF(my_stack_area),
+        func,
+        &start,
+        &end,
+        type,
+        MY_PRIORITY,
+        0,
+        K_NO_WAIT);
+
+    return 0x01;
 }
 
 RACP_RESPONSE handle_opcode_abort(racp_command command)
@@ -89,62 +100,66 @@ RACP_RESPONSE handle_opcode_report_records_number(racp_command command)
     uint32_t end           = 0;
     return response;
 }
+
+/*
+    Handle the combined report operator inside the racp request.
+*/
 RACP_RESPONSE handle_opcode_combined_report(racp_command command)
 {
-    RACP_RESPONSE response = 0x01;
-    uint32_t start         = 0;
-    uint32_t end           = 0;
-    bool operation_applied = false;
-    uint8_t length         = 0;
-    operand_function func  = &get_records_by_sequences;
-    struct ens_records* data;
+    uint32_t start        = 0;
+    uint32_t end          = 0;
+    uint8_t type          = 0;
+    operand_function func = get_all_records;
+
     switch (command.operator)
     {
     case RACP_OPERATOR_ALL_RECORDS:
-        data = get_all_records(&length);
+        // Nothing to do since this is the default config
         break;
+
     case RACP_OPERATOR_LESS_OR_EQUAL_TO:
-        // TODO: Maybe use unpack?
         memcpy(&end, (command.operand.operand_values + 4), sizeof(uint32_t));
-        if (command.operand.operand_type == RACP_OPERAND_TIMESTAMP)
-        {
-            func = &get_records_by_timestamps;
-        }
-        operation_applied = func(start, end);
+        type = command.operand.operand_type == RACP_OPERAND_TIMESTAMP;
         break;
+
     case RACP_OPERATOR_GREATER_OR_EQUAL_TO:
-        // TODO: Maybe use unpack?
         memcpy(&start, command.operand.operand_values, sizeof(uint32_t));
-        if (command.operand.operand_type == RACP_OPERAND_TIMESTAMP)
-        {
-            func = &get_records_by_timestamps;
-        }
-        operation_applied = func(start, end);
+        type = command.operand.operand_type == RACP_OPERAND_TIMESTAMP;
         break;
+
     case RACP_OPERATOR_WITHIN_RANGE_OF:
-        // TODO: Maybe use unpack?
         memcpy(&start, command.operand.operand_values, sizeof(uint32_t));
         memcpy(&end, (command.operand.operand_values + 4), sizeof(uint32_t));
-        if (command.operand.operand_type == RACP_OPERAND_TIMESTAMP)
-        {
-            func = &get_records_by_timestamps;
-        }
-        operation_applied = func(start, end);
+        type = command.operand.operand_type == RACP_OPERAND_TIMESTAMP;
         break;
+
     case RACP_OPERATOR_FIRST_RECORD:
-        operation_applied = get_first_record();
+        // TODO: does not work with current test_
+        func = get_first_record;
         break;
+
     case RACP_OPERATOR_LAST_RECORD:
-        operation_applied = get_last_record();
+        func = get_last_record;
         break;
+
     default:
-        response = 0x04;
-        break;
+        return 0x04;
     }
 
-    send_notification(data, length);
+    // The type is a uint8_t and will be cast into a concrete type in the ens_records_api
+    my_tid = k_thread_create(
+        &my_thread_data,
+        my_stack_area,
+        K_THREAD_STACK_SIZEOF(my_stack_area),
+        func,
+        &start,
+        &end,
+        type,
+        MY_PRIORITY,
+        0,
+        K_NO_WAIT);
 
-    return response;
+    return 0x01;
 }
 
 // parse command and send delete or get records, use enslog charactacteristic to send
