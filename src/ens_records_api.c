@@ -216,6 +216,8 @@ void generate_test_data(uint32_t timestamp)
 void get_all_records(uint32_t* start, uint32_t* end, compare_type type)
 {
     test_transfere(start, end, type);
+    printk("Executing finished \n");
+    next_record = 0;
 }
 
 void get_first_record()

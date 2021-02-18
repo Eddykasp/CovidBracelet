@@ -9,6 +9,7 @@
 K_THREAD_STACK_DEFINE(my_stack_area, MY_STACK_SIZE);
 struct k_thread my_thread_data;
 k_tid_t my_tid;
+uint16_t delay = 500;
 
 racp_command parse_racp_opcodes(const uint8_t* buf, const uint16_t len)
 {
@@ -82,7 +83,7 @@ RACP_RESPONSE handle_opcode_delete(racp_command command)
         type,
         MY_PRIORITY,
         0,
-        K_NO_WAIT);
+        K_MSEC(delay));
 
     return 0x01;
 }
@@ -157,7 +158,7 @@ RACP_RESPONSE handle_opcode_combined_report(racp_command command)
         type,
         MY_PRIORITY,
         0,
-        K_NO_WAIT);
+        K_MSEC(delay));
 
     return 0x01;
 }
