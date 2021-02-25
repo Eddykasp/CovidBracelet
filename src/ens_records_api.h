@@ -36,6 +36,7 @@ typedef enum
 
 typedef enum
 {
+    NOCHECK,
     SEQUENCENUMBER,
     TIMESTAMP,
 } compare_type;
@@ -65,7 +66,8 @@ bool delete_all_records();
 bool delete_first_record();
 bool delete_last_record();
 
-void test_transfere(uint32_t* start, uint32_t* end, compare_type);
+void test_transfere(uint32_t start, uint32_t end, compare_type type);
+bool check_filter_condition(uint32_t start, uint32_t end, compare_type type, ens_record* to_check);
 void generate_test_data(uint32_t timestamp);
 
 #endif

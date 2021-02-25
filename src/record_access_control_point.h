@@ -42,10 +42,12 @@
 
 #define RACP_RESPONSE uint16_t
 
+extern bool indicate_enabled;
+
 typedef struct __attribute__((packed))
 {
     uint8_t operand_type; // timestamp or sequence number
-    uint32_t* operand_values;
+    uint8_t operand_values[8];
 } operand_struct;
 
 typedef struct __attribute__((packed))

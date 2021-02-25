@@ -139,7 +139,43 @@ static void send_data_buffer(const void* data, uint16_t num_bytes_total)
     }
 }
 
-void test_transfere(uint32_t* start, uint32_t* end, compare_type type)
+bool check_filter_condition(uint32_t start, uint32_t end, compare_type type, ens_record* to_check)
+{
+    if (type == NOCHECK)
+    {
+        return true;
+    }
+
+    bool smaller = false;
+    bool greater = false;
+    printk("type %i \n", type);
+    if (type == SEQUENCENUMBER)
+    {
+        uint32_t ens_sequencenumber = 0;
+        ens_sequencenumber          = ens_sequencenumber | (to_check->sequence_number[2] << 16);
+        ens_sequencenumber          = ens_sequencenumber | (to_check->sequence_number[1] << 8);
+        ens_sequencenumber          = ens_sequencenumber | to_check->sequence_number[0];
+        smaller                     = (start == 0) ? true : ens_sequencenumber >= start;
+        greater                     = (end == 0) ? true : ens_sequencenumber <= end;
+        printk(
+            "sequence number compare %u, start = %u, end = %u \n",
+            ens_sequencenumber,
+            start,
+            end);
+    }
+    else
+    {
+        // If the start = 0, take all records until
+        smaller = (start == 0) ? true : to_check->timestamp >= start;
+        greater = (end == 0) ? true : to_check->timestamp <= end;
+        printk("timestamp compare %u, start = %u, end = %u \n", to_check->timestamp, start, end);
+    }
+
+    printk("smaller = %s, greater = %s \n", smaller ? "true" : "false", greater ? "true" : "false");
+    return smaller && greater;
+}
+
+void test_transfere(uint32_t start, uint32_t end, compare_type type)
 {
     // Get the currently max mtu from the wens
     ens_record* record;
@@ -148,9 +184,20 @@ void test_transfere(uint32_t* start, uint32_t* end, compare_type type)
     uint16_t size_occupied = 0;
     uint16_t size_record   = 0;
 
+    if ((start == 0) && (end == 0))
+        type = NOCHECK;
+
     while (get_next_ens_record(next_record) != NULL)
     {
-        record      = get_next_ens_record(next_record);
+        record = get_next_ens_record(next_record);
+
+        // In case this record should not be send, skip it
+        if (!check_filter_condition(start, end, type, record))
+        {
+            next_record++;
+            continue;
+        }
+
         size_record = ens_record_get_total_size(record);
 
         memcpy(&records_as_bytes[size_occupied], record, size_record);

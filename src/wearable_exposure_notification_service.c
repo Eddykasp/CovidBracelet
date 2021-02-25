@@ -92,6 +92,7 @@ static ssize_t write_ens_settings(
 }
 
 RACP_RESPONSE response = 0x0001;
+struct bt_gatt_indicate_params racp_indication_params;
 
 static ssize_t apply_racp_command(
     struct bt_conn* conn,
@@ -102,9 +103,12 @@ static ssize_t apply_racp_command(
     uint8_t flags)
 {
     // Check for MTU every racp request in case MTU changed
-    max_mtu = bt_gatt_get_mtu(conn);
-    printk("max mtu = %d", max_mtu);
-    RACP_RESPONSE response = execute_racp(parse_racp_opcodes(buf, len));
+    max_mtu                = bt_gatt_get_mtu(conn);
+    racp_command com       = parse_racp_opcodes(buf, len);
+    RACP_RESPONSE response = execute_racp(com);
+
+    send_racp_response();
+
     return len;
 }
 
@@ -135,11 +139,12 @@ BT_GATT_SERVICE_DEFINE(
         &current_ens_settings),
     BT_GATT_CHARACTERISTIC(
         BT_UUID_WENS_RACP,
-        BT_GATT_CHRC_WRITE,
+        BT_GATT_CHRC_WRITE | BT_GATT_CHRC_INDICATE,
         BT_GATT_PERM_WRITE,
         NULL,
         apply_racp_command,
-        &response));
+        &response),
+    BT_GATT_CCC(racp_response_indicate, BT_GATT_PERM_READ | BT_GATT_PERM_WRITE));
 
 static void notify_enabled_ens_records(const struct bt_gatt_attr* attr, uint16_t value)
 {
@@ -151,6 +156,28 @@ void send_notification(uint8_t* ens_log, uint8_t len)
 {
     printk("send notify with len %i \n", len);
     bt_gatt_notify(NULL, &wens_svc.attrs[1], ens_log, len);
+}
+
+static void racp_response_indicate(const struct bt_gatt_attr* attr, u16_t value)
+{
+    indicate_enabled = value == BT_GATT_CCC_INDICATE;
+    printk("indicate enabled is now %s\n", indicate_enabled ? "true" : "false");
+}
+
+static void racp_indication_cb(struct bt_conn* conn, const struct bt_gatt_attr* attr, u8_t err)
+{
+    printk("Indication %s\n", err != 0 ? "fail" : "success");
+}
+
+void send_racp_response()
+{
+    printk("uudi %s", wens_svc.attrs[5].uuid);
+    racp_indication_params.attr = &wens_svc.attrs[5];
+    racp_indication_params.func = racp_indication_cb;
+    racp_indication_params.data = &response;
+    racp_indication_params.len  = sizeof(RACP_RESPONSE);
+
+    bt_gatt_indicate(NULL, &racp_indication_params);
 }
 
 uint16_t get_max_mtu()
