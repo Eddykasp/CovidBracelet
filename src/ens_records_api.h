@@ -62,12 +62,18 @@ If start = 0, delete all records with timestamp <= end
 If end = 0, delete all records with timestamp >= start
 if both are unequal to 0, delete within range start <= timestamp <= end
 */
-bool delete_all_records();
+
 bool delete_first_record();
 bool delete_last_record();
 
-void test_transfere(uint32_t start, uint32_t end, compare_type type);
+void delete_records(uint32_t start, uint32_t end, compare_type type);
+
+void count_records(uint32_t start, uint32_t end, compare_type type);
+
+void combined_report(uint32_t start, uint32_t end, compare_type type);
+
 bool check_filter_condition(uint32_t start, uint32_t end, compare_type type, ens_record* to_check);
+
 void generate_test_data(uint32_t timestamp);
 
 #endif

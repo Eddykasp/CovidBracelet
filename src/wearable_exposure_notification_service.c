@@ -103,11 +103,9 @@ static ssize_t apply_racp_command(
     uint8_t flags)
 {
     // Check for MTU every racp request in case MTU changed
-    max_mtu                = bt_gatt_get_mtu(conn);
-    racp_command com       = parse_racp_opcodes(buf, len);
-    RACP_RESPONSE response = execute_racp(com);
+    max_mtu = bt_gatt_get_mtu(conn);
 
-    send_racp_response();
+    execute_racp(parse_racp_opcodes(buf, len));
 
     return len;
 }
@@ -169,13 +167,18 @@ static void racp_indication_cb(struct bt_conn* conn, const struct bt_gatt_attr* 
     printk("Indication %s\n", err != 0 ? "fail" : "success");
 }
 
-void send_racp_response()
+void send_racp_response(void* response, uint16_t len)
 {
     printk("uudi %s", wens_svc.attrs[5].uuid);
     racp_indication_params.attr = &wens_svc.attrs[5];
     racp_indication_params.func = racp_indication_cb;
-    racp_indication_params.data = &response;
-    racp_indication_params.len  = sizeof(RACP_RESPONSE);
+    racp_indication_params.data = response;
+    racp_indication_params.len  = len;
+
+    for (size_t i = 0; i < len; i++)
+    {
+        printk("%02X", ((const uint8_t*)response)[i]);
+    }
 
     bt_gatt_indicate(NULL, &racp_indication_params);
 }

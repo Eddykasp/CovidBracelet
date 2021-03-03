@@ -10,6 +10,7 @@
 #define RACP_OPCODE_COMBINED_REPORT 0x07
 
 // Response Opcodes
+#define RACP_RESPONSE_NO_OPERATOR 0x00
 #define RACP_RESPONSE_NUMBER_OF_RECORDS 0x05
 #define RACP_RESPONSE_RESPONSE_CODE 0x06
 #define RACP_RESPONSE_COMBINED_REPORT_RESPONSE 0x08
@@ -59,14 +60,13 @@ typedef struct __attribute__((packed))
 
 typedef bool (*operand_function)(uint32_t, uint32_t);
 
-RACP_RESPONSE handle_opcode_delete(racp_command);
-RACP_RESPONSE handle_opcode_abort(racp_command);
-RACP_RESPONSE handle_opcode_report_records_number(racp_command);
-RACP_RESPONSE handle_opcode_combined_report(racp_command);
-
 racp_command parse_racp_opcodes(const uint8_t* buf, const uint16_t len);
 
-// delete records or send records via enslog characteristic
-RACP_RESPONSE execute_racp(racp_command command);
+void handle_opcode_delete(racp_command);
+void handle_opcode_abort(racp_command);
+void handle_opcode_report_records_number(racp_command);
+void handle_opcode_combined_report(racp_command);
 
+// delete records or send records via enslog characteristic
+void execute_racp(racp_command command);
 #endif

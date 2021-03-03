@@ -1,4 +1,5 @@
 #include "ens_records_api.h"
+#include "record_access_control_point.h"
 #include "wearable_exposure_notification_service.h"
 #include <bluetooth/uuid.h>
 
@@ -175,7 +176,7 @@ bool check_filter_condition(uint32_t start, uint32_t end, compare_type type, ens
     return smaller && greater;
 }
 
-void test_transfere(uint32_t start, uint32_t end, compare_type type)
+void combined_report(uint32_t start, uint32_t end, compare_type type)
 {
     // Get the currently max mtu from the wens
     ens_record* record;
@@ -187,9 +188,9 @@ void test_transfere(uint32_t start, uint32_t end, compare_type type)
     if ((start == 0) && (end == 0))
         type = NOCHECK;
 
-    while (get_next_ens_record(next_record) != NULL)
+    while (get_next_ens_record() != NULL)
     {
-        record = get_next_ens_record(next_record);
+        record = get_next_ens_record();
 
         // In case this record should not be send, skip it
         if (!check_filter_condition(start, end, type, record))
@@ -210,7 +211,7 @@ void test_transfere(uint32_t start, uint32_t end, compare_type type)
         // If there is one more record, check if both fit into one packet
         if (next_record < get_ens_records_count())
         {
-            ens_record* nextRecord = get_next_ens_record(next_record);
+            ens_record* nextRecord = get_next_ens_record();
             uint16_t size_next     = ens_record_get_total_size(nextRecord);
 
             printk("next size is = %i \n ", size_next);
@@ -231,6 +232,71 @@ void test_transfere(uint32_t start, uint32_t end, compare_type type)
             size_occupied = 0;
         }
     }
+    next_record = 0;
+}
+
+void count_records(uint32_t start, uint32_t end, compare_type type)
+{
+    // Get the currently max mtu from the wens
+    ens_record* record;
+    uint32_t records_counted = 0;
+
+    if ((start == 0) && (end == 0))
+        type = NOCHECK;
+
+    while (get_next_ens_record() != NULL)
+    {
+        record = get_next_ens_record();
+        next_record++;
+        // In case this record should not be send, skip it
+        if (!check_filter_condition(start, end, type, record))
+        {
+            continue;
+        }
+
+        records_counted++;
+    }
+
+    // Size of opcode + size of operator + size of uint32_t * 3 at most = 14 bytes
+    unsigned char buffer[6] = {};
+    buffer[0]               = RACP_RESPONSE_NUMBER_OF_RECORDS;
+    buffer[1]               = 0;
+    memcpy(buffer + 2, &records_counted, sizeof(uint32_t));
+
+    send_racp_response(buffer, 6);
+    next_record = 0;
+}
+
+void delete_records(uint32_t start, uint32_t end, compare_type type)
+{
+    // Get the currently max mtu from the wens
+    ens_record* record;
+
+    if ((start == 0) && (end == 0))
+        type = NOCHECK;
+
+    while (get_next_ens_record() != NULL)
+    {
+        record = get_next_ens_record();
+        next_record++;
+
+        // In case this record should not be deleted, skip it
+        if (!check_filter_condition(start, end, type, record))
+        {
+            continue;
+        }
+
+        // TODO:: Now the ens backend needs to be informed what to delete
+    }
+
+    // Size of opcode + size of operator + size of uint32_t * 3 at most = 14 bytes
+    unsigned char buffer[3] = {};
+    buffer[0]               = RACP_RESPONSE_RESPONSE_CODE;
+    buffer[1]               = RACP_OPCODE_DELETE_STORED_RECORDS;
+    buffer[2]               = RACP_RESPONSE_SUCCESS;
+
+    send_racp_response(buffer, 3);
+    next_record = 0;
 }
 
 bool add_ens_record(ens_record new_entry)
@@ -260,13 +326,6 @@ void generate_test_data(uint32_t timestamp)
     }
 }
 
-void get_all_records(uint32_t* start, uint32_t* end, compare_type type)
-{
-    test_transfere(start, end, type);
-    printk("Executing finished \n");
-    next_record = 0;
-}
-
 void get_first_record()
 {
     return ens_records;
@@ -275,11 +334,6 @@ void get_first_record()
 void get_last_record()
 {
     return ens_records;
-}
-
-bool delete_all_records()
-{
-    return true;
 }
 
 bool delete_first_record()

@@ -18,14 +18,8 @@ racp_command parse_racp_opcodes(const uint8_t* buf, const uint16_t len)
     operand_struct operand = {0};
     racp_command command   = {0};
     command.operand        = operand;
-
-    for (int i = 0; i < len; i++)
-    {
-        printk("byte %u \n", buf[i]);
-    }
-
-    command.opcode  = buf[0];
-    command.operator= buf[1];
+    command.opcode         = buf[0];
+    command.operator       = buf[1];
 
     if (len >= 2)
     {
@@ -62,13 +56,13 @@ uint32_t getSequenceNumber(uint8_t* operand_value)
 /*
     Handle the delete operator inside the racp request.
 */
-RACP_RESPONSE handle_opcode_delete(racp_command command)
+void handle_opcode_delete(racp_command command)
 {
     uint32_t start        = 0;
     uint32_t end          = 0;
     uint8_t type          = NOCHECK;
-    operand_function func = delete_all_records;
-    printk("i am handle_opcode_delete\n");
+    operand_function func = delete_records;
+
     switch (command.operator)
     {
     case RACP_OPERATOR_ALL_RECORDS:
@@ -118,31 +112,95 @@ RACP_RESPONSE handle_opcode_delete(racp_command command)
     return 0x01;
 }
 
-RACP_RESPONSE handle_opcode_abort(racp_command command)
+void handle_opcode_abort(racp_command command)
 {
-    printk("i am handle_opcode_abort\n");
-    RACP_RESPONSE response = 0x01;
-    // TODO: Abort function
-    return response;
+    k_thread_abort(my_tid);
+    unsigned char buffer[4];
+
+    buffer[0] = RACP_RESPONSE_RESPONSE_CODE;
+    buffer[1] = RACP_RESPONSE_NO_OPERATOR;
+    buffer[2] = RACP_OPCODE_ABPORT_OPERATION;
+    buffer[3] = RACP_RESPONSE_SUCCESS;
+    send_racp_response(buffer, 4);
 }
-RACP_RESPONSE handle_opcode_report_records_number(racp_command command)
+
+void handle_opcode_report_records_number(racp_command command)
 {
-    printk("i am handle_opcode_report_records_number\n");
-    RACP_RESPONSE response = 0x01;
-    uint32_t start         = 0;
-    uint32_t end           = 0;
-    return response;
+    uint32_t start        = 0;
+    uint32_t end          = 0;
+    uint8_t type          = NOCHECK;
+    operand_function func = count_records;
+
+    switch (command.operator)
+    {
+    case RACP_OPERATOR_ALL_RECORDS:
+        // Nothing to do since this is the default config
+        break;
+
+    case RACP_OPERATOR_LESS_OR_EQUAL_TO:
+        type = command.operand.operand_type;
+        end  = (type == SEQUENCENUMBER) ? getSequenceNumber(command.operand.operand_values)
+                                        : getTimeStamp(command.operand.operand_values);
+
+        break;
+
+    case RACP_OPERATOR_GREATER_OR_EQUAL_TO:
+        type  = command.operand.operand_type;
+        start = (type == SEQUENCENUMBER) ? getSequenceNumber(command.operand.operand_values)
+                                         : getTimeStamp(command.operand.operand_values);
+        break;
+
+    case RACP_OPERATOR_WITHIN_RANGE_OF:
+        type = command.operand.operand_type;
+        if (type == SEQUENCENUMBER)
+        {
+            start = getSequenceNumber(command.operand.operand_values);
+            end   = getSequenceNumber(command.operand.operand_values + 3);
+        }
+        else
+        {
+            start = getTimeStamp(command.operand.operand_values);
+            end   = getTimeStamp((command.operand.operand_values + 4));
+        }
+        break;
+
+    case RACP_OPERATOR_FIRST_RECORD:
+        // TODO: not Supported
+        break;
+
+    case RACP_OPERATOR_LAST_RECORD:
+        // TODO: not Supported
+        break;
+
+    default:
+
+        return;
+    }
+
+    printk("start thread\n");
+    // The type is a uint8_t and will be cast into a concrete type in the ens_records_api
+    my_tid = k_thread_create(
+        &my_thread_data,
+        my_stack_area,
+        K_THREAD_STACK_SIZEOF(my_stack_area),
+        func,
+        start,
+        end,
+        type,
+        MY_PRIORITY,
+        0,
+        K_MSEC(delay));
 }
 
 /*
     Handle the combined report operator inside the racp request.
 */
-RACP_RESPONSE handle_opcode_combined_report(racp_command command)
+void handle_opcode_combined_report(racp_command command)
 {
     uint32_t start        = 0;
     uint32_t end          = 0;
     uint8_t type          = NOCHECK;
-    operand_function func = get_all_records;
+    operand_function func = combined_report;
 
     switch (command.operator)
     {
@@ -209,7 +267,7 @@ RACP_RESPONSE handle_opcode_combined_report(racp_command command)
 
 // parse command and send delete or get records, use enslog charactacteristic to send
 // notifications to client
-RACP_RESPONSE execute_racp(racp_command command)
+void execute_racp(racp_command command)
 {
     RACP_RESPONSE response = 0;
 
