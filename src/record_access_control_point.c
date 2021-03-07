@@ -3,7 +3,7 @@
 #include <string.h>
 #include <bluetooth/uuid.h>
 
-#define MY_STACK_SIZE 2000
+#define MY_STACK_SIZE 20000
 #define MY_PRIORITY 5
 // K_THREAD_DEFINE(my_tid, MY_STACK_SIZE, test_transfere, NULL, NULL, NULL, MY_PRIORITY, 0, 0);
 K_THREAD_STACK_DEFINE(my_stack_area, MY_STACK_SIZE);
@@ -53,6 +53,17 @@ uint32_t getSequenceNumber(uint8_t* operand_value)
     return sequence_number;
 }
 
+void functionality_not_supported(uint8_t command, uint8_t type)
+{
+    unsigned char response_if_error[4];
+    response_if_error[0] = RACP_RESPONSE_RESPONSE_CODE;
+    response_if_error[1] = 0;
+    response_if_error[2] = command;
+    response_if_error[3] = type;
+
+    send_racp_response(response_if_error, 4);
+}
+
 /*
     Handle the delete operator inside the racp request.
 */
@@ -94,7 +105,8 @@ void handle_opcode_delete(racp_command command)
         break;
 
     default:
-        return 0x04;
+        functionality_not_supported(command.opcode, RACP_RESPONSE_OPERATOR_NOT_SUPPORTED);
+        return;
     }
 
     my_tid = k_thread_create(
@@ -114,13 +126,23 @@ void handle_opcode_delete(racp_command command)
 
 void handle_opcode_abort(racp_command command)
 {
+    unsigned char* abort = "unknown";
     k_thread_abort(my_tid);
+    unsigned char* result = k_thread_state_str(my_tid);
     unsigned char buffer[4];
 
     buffer[0] = RACP_RESPONSE_RESPONSE_CODE;
     buffer[1] = RACP_RESPONSE_NO_OPERATOR;
     buffer[2] = RACP_OPCODE_ABPORT_OPERATION;
-    buffer[3] = RACP_RESPONSE_SUCCESS;
+    if (strcmp(result, abort) == 0)
+    {
+        buffer[3] = RACP_RESPONSE_SUCCESS;
+    }
+    else
+    {
+        buffer[3] = RACP_RESPONSE_ABORT_UNSUCCESSFUL;
+    }
+
     send_racp_response(buffer, 4);
 }
 
@@ -173,7 +195,7 @@ void handle_opcode_report_records_number(racp_command command)
         break;
 
     default:
-
+        functionality_not_supported(command.opcode, RACP_RESPONSE_OPERATOR_NOT_SUPPORTED);
         return;
     }
 
@@ -245,7 +267,8 @@ void handle_opcode_combined_report(racp_command command)
         break;
 
     default:
-        return 0x04;
+        functionality_not_supported(command.opcode, RACP_RESPONSE_OPERATOR_NOT_SUPPORTED);
+        return;
     }
 
     printk("start thread\n");
@@ -261,16 +284,12 @@ void handle_opcode_combined_report(racp_command command)
         MY_PRIORITY,
         0,
         K_MSEC(delay));
-
-    return 0x01;
 }
 
 // parse command and send delete or get records, use enslog charactacteristic to send
 // notifications to client
 void execute_racp(racp_command command)
 {
-    RACP_RESPONSE response = 0;
-
     printk("what do i chose? %u", command.opcode);
     switch (command.opcode)
     {
@@ -287,9 +306,7 @@ void execute_racp(racp_command command)
         handle_opcode_combined_report(command);
         break;
     default:
-        response = 0x02;
+        functionality_not_supported(command.opcode, RACP_RESPONSE_OPCODE_NOT_SUPPORTED);
         break;
     }
-
-    return response;
 }

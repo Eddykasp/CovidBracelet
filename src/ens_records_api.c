@@ -93,6 +93,7 @@ static size_t send_packet(packet_kind kind, const void* data, size_t size)
     send_notification(sending_packet, size + 1);
     // TODO: The thread should wait until the send_notification was performed.
     // use 100 msec as this works with the current implementation.
+    printk("Sending stuf\n");
     k_sleep(K_MSEC(100));
     return size;
 }
@@ -232,6 +233,13 @@ void combined_report(uint32_t start, uint32_t end, compare_type type)
             size_occupied = 0;
         }
     }
+
+    // Check if there is a rest to send
+    if (size_occupied != 0)
+    {
+        send_data_buffer(&records_as_bytes, size_occupied);
+    }
+
     next_record = 0;
 }
 
@@ -306,19 +314,33 @@ bool add_ens_record(ens_record new_entry)
     return true;
 }
 
+void generate_test_ltv_field(ltv_field* field)
+{
+    for (int i = 0; i < 16; i++)
+    {
+        memcpy(field->ltv_value + i, &i, sizeof(uint8_t));
+    }
+
+    for (int i = 0; i < 4; i++)
+    {
+        memcpy(field->ltv_value + i + 16, &i, sizeof(uint8_t));
+    }
+}
+
 void generate_test_data(uint32_t timestamp)
 {
     printk("starting creation of test data");
     for (int i = 1; i <= 10; i++)
     {
-        ltv_field field   = {0};
-        field.length      = 1;
-        field.type        = 5;
-        field.ltv_value   = 1 + i;
+        ltv_field field = {0};
+        field.length    = 20; // TODO = 20
+        field.type      = 0;
+        generate_test_ltv_field(&field); // TODO:: 16 byte array immer das gleiche und metadata too
+        print_bytes(field.ltv_value, 20);
         ens_record record = {0};
         ens_record_set_sequence_number(&record, i);
         record.timestamp        = timestamp + (i * 60);
-        record.length           = sizeof(ltv_field);
+        record.length           = 22; // Curent size of maximal ltv field (only 1 field)
         record.ltv_structure[0] = field;
         printk("add element %i \n", i);
         add_ens_record(record);

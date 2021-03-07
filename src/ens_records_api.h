@@ -6,9 +6,9 @@
 // Made up of 1 or more concatenated ltv structures
 typedef struct __attribute__((packed))
 {
-    uint8_t length;    // Size of the ltv_value
-    uint8_t type;      // type of the ltv_value
-    uint8_t ltv_value; // one of many possivle ltv_values (WENS v0.7)
+    uint8_t length;        // Size of the ltv_value
+    uint8_t type;          // type of the ltv_value
+    uint8_t ltv_value[20]; // one of many possivle ltv_values (WENS v0.7)
 } ltv_field;
 
 typedef struct __attribute__((packed))
@@ -75,5 +75,5 @@ void combined_report(uint32_t start, uint32_t end, compare_type type);
 bool check_filter_condition(uint32_t start, uint32_t end, compare_type type, ens_record* to_check);
 
 void generate_test_data(uint32_t timestamp);
-
+void generate_test_ltv_field(ltv_field* field);
 #endif

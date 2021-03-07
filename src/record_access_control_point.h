@@ -69,4 +69,5 @@ void handle_opcode_combined_report(racp_command);
 
 // delete records or send records via enslog characteristic
 void execute_racp(racp_command command);
+void functionality_not_supported(uint8_t command, uint8_t type);
 #endif
