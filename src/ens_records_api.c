@@ -44,7 +44,6 @@ static uint16_t ens_record_get_total_size(const ens_record* record)
            record->length;
 }
 
-// TODO:: Remove later
 static void print_bytes(const void* data, size_t size)
 {
     for (size_t i = 0; i < size; i++)
@@ -83,7 +82,6 @@ static size_t send_packet(packet_kind kind, const void* data, size_t size)
     // Packet too large!
     if (size + 1 > get_max_mtu())
     {
-        printk("packed too large");
         return 0;
     }
 
@@ -91,10 +89,10 @@ static size_t send_packet(packet_kind kind, const void* data, size_t size)
 
     print_bytes(sending_packet, size + 1);
     send_notification(sending_packet, size + 1);
-    // TODO: The thread should wait until the send_notification was performed.
-    // use 100 msec as this works with the current implementation.
-    printk("Sending stuf\n");
-    k_sleep(K_MSEC(100));
+    // TODO: FInd out how to get connection intervall and calculate the time to sleep before next
+    // send
+    // 1 msec is enough right now to not crash the connection
+    k_sleep(K_MSEC(1));
     return size;
 }
 
@@ -115,23 +113,19 @@ static void send_data_buffer(const void* data, uint16_t num_bytes_total)
 
     if (num_bytes_total <= get_max_packet_size())
     {
-        printk("send package as one");
         send_packet(PACKAGE_KIND_COMPLETE, data, num_bytes_total);
     }
     else
     {
-        printk("send package as multiple packages");
         num_bytes_sent += send_packet(PACKAGE_KIND_FIRST, dataBytes, get_max_packet_size());
 
         while (num_bytes_sent + get_packet_size(num_bytes_sent, num_bytes_total) != num_bytes_total)
         {
-            printk("keep sending");
             num_bytes_sent += send_packet(
                 PACKAGE_KIND_CONTINUATION,
                 &dataBytes[num_bytes_sent],
                 get_max_packet_size());
         }
-        printk("last part");
         uint16_t remaining = get_packet_size(num_bytes_sent, num_bytes_total);
 
         if (remaining != 0)
@@ -150,7 +144,7 @@ bool check_filter_condition(uint32_t start, uint32_t end, compare_type type, ens
 
     bool smaller = false;
     bool greater = false;
-    printk("type %i \n", type);
+
     if (type == SEQUENCENUMBER)
     {
         uint32_t ens_sequencenumber = 0;
@@ -159,21 +153,14 @@ bool check_filter_condition(uint32_t start, uint32_t end, compare_type type, ens
         ens_sequencenumber          = ens_sequencenumber | to_check->sequence_number[0];
         smaller                     = (start == 0) ? true : ens_sequencenumber >= start;
         greater                     = (end == 0) ? true : ens_sequencenumber <= end;
-        printk(
-            "sequence number compare %u, start = %u, end = %u \n",
-            ens_sequencenumber,
-            start,
-            end);
     }
     else
     {
         // If the start = 0, take all records until
         smaller = (start == 0) ? true : to_check->timestamp >= start;
         greater = (end == 0) ? true : to_check->timestamp <= end;
-        printk("timestamp compare %u, start = %u, end = %u \n", to_check->timestamp, start, end);
     }
 
-    printk("smaller = %s, greater = %s \n", smaller ? "true" : "false", greater ? "true" : "false");
     return smaller && greater;
 }
 
@@ -204,9 +191,6 @@ void combined_report(uint32_t start, uint32_t end, compare_type type)
 
         memcpy(&records_as_bytes[size_occupied], record, size_record);
 
-        printk("current record = %i \n ", next_record);
-        printk("size is = %i and occupied size is = %i \n ", size_record, size_occupied);
-
         size_occupied += size_record;
         next_record++;
         // If there is one more record, check if both fit into one packet
@@ -215,11 +199,8 @@ void combined_report(uint32_t start, uint32_t end, compare_type type)
             ens_record* nextRecord = get_next_ens_record();
             uint16_t size_next     = ens_record_get_total_size(nextRecord);
 
-            printk("next size is = %i \n ", size_next);
-            printk("total used size will be = %i \n ", size_occupied + size_next);
             if (size_occupied + size_next >= get_max_packet_size())
             {
-                printk("Doesn't Fit! \n ");
                 // Next packet too big, send only one
                 send_data_buffer(&records_as_bytes, size_occupied);
                 size_occupied = 0;
@@ -227,7 +208,6 @@ void combined_report(uint32_t start, uint32_t end, compare_type type)
         }
         else
         {
-            printk("No more packets left! send last \n ");
             // Last packet in queue, send as usual
             send_data_buffer(&records_as_bytes, size_occupied);
             size_occupied = 0;
@@ -329,20 +309,19 @@ void generate_test_ltv_field(ltv_field* field)
 
 void generate_test_data(uint32_t timestamp)
 {
-    printk("starting creation of test data");
     for (int i = 1; i <= 10; i++)
     {
         ltv_field field = {0};
-        field.length    = 20; // TODO = 20
+        field.length    = 20;
         field.type      = 0;
-        generate_test_ltv_field(&field); // TODO:: 16 byte array immer das gleiche und metadata too
-        print_bytes(field.ltv_value, 20);
+        generate_test_ltv_field(&field);
+
         ens_record record = {0};
         ens_record_set_sequence_number(&record, i);
         record.timestamp        = timestamp + (i * 60);
         record.length           = 22; // Curent size of maximal ltv field (only 1 field)
         record.ltv_structure[0] = field;
-        printk("add element %i \n", i);
+
         add_ens_record(record);
         ens_records_count = i;
     }
@@ -350,19 +329,20 @@ void generate_test_data(uint32_t timestamp)
 
 void get_first_record()
 {
-    return ens_records;
+    // TODO:: Add implementation
 }
 
 void get_last_record()
 {
-    return ens_records;
+    // TODO:: Add implementation
 }
 
-bool delete_first_record()
+void delete_first_record()
 {
-    return true;
+    // TODO:: Add implementation
 }
-bool delete_last_record()
+
+void delete_last_record()
 {
-    return true;
+    // TODO:: Add implementation
 }

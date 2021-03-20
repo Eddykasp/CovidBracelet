@@ -26,6 +26,7 @@ typedef struct __attribute__((packed))
     ens_record record;
 } ens_log;
 
+// Used for ENS Logs to figure out what kind of log will be sent
 typedef enum
 {
     PACKAGE_KIND_COMPLETE,
@@ -45,35 +46,29 @@ extern ens_record ens_records[10];
 
 extern bool notify_enabled;
 
+// TODO:: Only tests right now. This will later be removed and the flash memory will be used to
+// acces records, add or remove records
 bool add_ens_record(ens_record new_entry);
+static ens_record* get_next_ens_record();
+uint16_t get_ens_records_count();
+void generate_test_data(uint32_t timestamp);
+void generate_test_ltv_field(ltv_field* field);
 
-// len is always the amount of records not the length
-void get_all_records(uint32_t* start, uint32_t* end, compare_type type);
+// TODO::Unimplemented right now since they will depend on the implementation of accessing records
+// from flash memory
+void delete_first_record();
+void delete_last_record();
 void get_first_record();
 void get_last_record();
 
-// TODO test iterator for test dada
-static ens_record* get_next_ens_record();
-uint16_t get_ens_records_count();
-
-// define how end is interpreted
-/* Delete all records by timestamps.
-If start = 0, delete all records with timestamp <= end
-If end = 0, delete all records with timestamp >= start
-if both are unequal to 0, delete within range start <= timestamp <= end
-*/
-
-bool delete_first_record();
-bool delete_last_record();
-
+// The methods to delete, count and send reports (ens logs)
+// start and end are the values to filter the ens recods by
+// type will be timestamp or sequence number as the value to be used in filtering the records
 void delete_records(uint32_t start, uint32_t end, compare_type type);
-
 void count_records(uint32_t start, uint32_t end, compare_type type);
-
 void combined_report(uint32_t start, uint32_t end, compare_type type);
 
+// Funktion to check if a record holds the filter condition and should be processed
 bool check_filter_condition(uint32_t start, uint32_t end, compare_type type, ens_record* to_check);
 
-void generate_test_data(uint32_t timestamp);
-void generate_test_ltv_field(ltv_field* field);
 #endif

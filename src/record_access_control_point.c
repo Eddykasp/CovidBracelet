@@ -3,16 +3,17 @@
 #include <string.h>
 #include <bluetooth/uuid.h>
 
+// Thread data
 #define MY_STACK_SIZE 20000
 #define MY_PRIORITY 5
-// K_THREAD_DEFINE(my_tid, MY_STACK_SIZE, test_transfere, NULL, NULL, NULL, MY_PRIORITY, 0, 0);
 K_THREAD_STACK_DEFINE(my_stack_area, MY_STACK_SIZE);
 struct k_thread my_thread_data;
 k_tid_t my_tid;
-uint16_t delay = 500;
+uint16_t start_thread_delay = 500;
 
 bool indicate_enabled = false;
 
+// Parse the bytestring to a racp_command structure
 racp_command parse_racp_opcodes(const uint8_t* buf, const uint16_t len)
 {
     operand_struct operand = {0};
@@ -119,7 +120,7 @@ void handle_opcode_delete(racp_command command)
         type,
         MY_PRIORITY,
         0,
-        K_MSEC(delay));
+        K_MSEC(start_thread_delay));
 
     return 0x01;
 }
@@ -134,14 +135,8 @@ void handle_opcode_abort(racp_command command)
     buffer[0] = RACP_RESPONSE_RESPONSE_CODE;
     buffer[1] = RACP_RESPONSE_NO_OPERATOR;
     buffer[2] = RACP_OPCODE_ABPORT_OPERATION;
-    if (strcmp(result, abort) == 0)
-    {
-        buffer[3] = RACP_RESPONSE_SUCCESS;
-    }
-    else
-    {
-        buffer[3] = RACP_RESPONSE_ABORT_UNSUCCESSFUL;
-    }
+    buffer[3] =
+        strcmp(result, abort) == 0 ? RACP_RESPONSE_SUCCESS : RACP_RESPONSE_ABORT_UNSUCCESSFUL;
 
     send_racp_response(buffer, 4);
 }
@@ -211,7 +206,7 @@ void handle_opcode_report_records_number(racp_command command)
         type,
         MY_PRIORITY,
         0,
-        K_MSEC(delay));
+        K_MSEC(start_thread_delay));
 }
 
 /*
@@ -258,7 +253,6 @@ void handle_opcode_combined_report(racp_command command)
         break;
 
     case RACP_OPERATOR_FIRST_RECORD:
-        // TODO: does not work with current test_
         func = get_first_record;
         break;
 
@@ -283,7 +277,7 @@ void handle_opcode_combined_report(racp_command command)
         type,
         MY_PRIORITY,
         0,
-        K_MSEC(delay));
+        K_MSEC(start_thread_delay));
 }
 
 // parse command and send delete or get records, use enslog charactacteristic to send
