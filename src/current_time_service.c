@@ -60,9 +60,7 @@ static ssize_t write_time_epoch(
     uint8_t flags)
 {
     memcpy(&last_time_update, buf, sizeof(uint32_t));
-    printk("time received is: %d \n", last_time_update);
-    current_time = last_time_update - base_time;
-    printk("current time is: %d \n", current_time);
+    current_time     = last_time_update - base_time;
     last_time_update = k_uptime_get_32();
 
     if (temporary_keys_entries == 0)
@@ -71,7 +69,7 @@ static ssize_t write_time_epoch(
         temporary_keys_entries++;
     }
 
-    // TODO: Remove this test function
+    // TODO: Remove this test function if not neccesary anymore
     generate_test_data(current_time);
     return len;
 }
